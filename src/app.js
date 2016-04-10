@@ -131,19 +131,19 @@ insMenus.on('accelTap', function(e){
     
 });
 
-i = 0;
+var j = 0;
 ingMenus.on('accelTap', function(e){
   function populateMenu(data) {
     Vibe.vibrate('short');
-    if(i<numIngreds-1) i++;
-    else i = 0;
+    if(j<numIngreds-1) j++;
+    else j = 0;
     var calories = data.calories;
     var fat = data.fat;
     var carbs = data.carbs;
     
     // Create the Card for detailed view
     var detailCard = new UI.Card({
-      title: ingredients[i],
+      title: ingredients[j],
       body: 'Calories......' + calories + '\n' +
             'Fat.............' + fat + '\n' + 
             'Carbs.........' + carbs
@@ -154,14 +154,16 @@ ingMenus.on('accelTap', function(e){
   
   function handleError(error) {
     console.error(error);
-     Vibe.vibrate('long');
+    Vibe.vibrate('long');
     
     var detailCard = new UI.Card({
       title: 'Request Failed!!!'
+      
     });
-    detailCard .show();
+    detailCard.show();
+    setTimeout(function(){ detailCard.hide(); }, 5000);
   }
-  getIngredientInfo(ingredients[i], populateMenu, handleError);
+  getIngredientInfo(ingredients[j], populateMenu, handleError);
 });
 
 ////////////////
