@@ -3,14 +3,13 @@
     "capabilities": [
         ""
     ],
-    "companyName": "samrose3@gmail.com",
+    "companyName": "paineleffler@gmail.com",
     "longName": "RecipEZ",
     "projectType": "pebblejs",
     "resources": {
         "media": [
             {
                 "file": "images/menu_icon.png",
-                "menuIcon": true,
                 "name": "IMAGE_MENU_ICON",
                 "type": "bitmap"
             },
@@ -28,6 +27,12 @@
                 "file": "fonts/UbuntuMono-Regular.ttf",
                 "name": "MONO_FONT_14",
                 "type": "font"
+            },
+            {
+                "file": "images/pizza",
+                "menuIcon": true,
+                "name": "IMAGES_PIZZA",
+                "type": "bitmap"
             }
         ]
     },
@@ -37,9 +42,9 @@
         "aplite",
         "basalt"
     ],
-    "uuid": "769dd7d3-f147-4b71-a12e-b6d63581da45",
+    "uuid": "5807dec1-c877-4fb7-b408-3ec688008e6c",
     "versionCode": 1,
-    "versionLabel": "1.0",
+    "versionLabel": "1.1",
     "watchapp": {
         "hiddenApp": false,
         "watchface": false

@@ -1,18 +1,17 @@
-/**
- * Welcome to Pebble.js!
- *
- * This is where you write your app.
- */
-
 var UI = require('ui');
 var Vibe = require('ui/vibe');
 var Ajax = require('ajax');
+var Accel = require('ui/accel');
 
+var Vector2 = require('vector2');
 var message = {
   "ingredients": [
     "1 pita bread",
     "2 tbsp pizza sauce",
-    "1/4 cup mozerella cheese"
+    "1/4 cup swiss cheese",
+    "5 slices of pineapple",
+    "10g of pepperoni"
+    
   ],
   "steps":[
     "Preheat Oven to 365",
@@ -22,102 +21,176 @@ var message = {
     "eat pizza"
   ]
 };
+var iphoneMessage;
 
-console.log("message", JSON.stringify(message));
-console.log("ingredients", JSON.stringify(message.ingredients));
+//ingredient data
+var ingredients = message.ingredients;
+var numIngreds = ingredients.length;
+//instruction data
+var instructions = message.steps;
+var numInstrucs = message.steps.length;
 
-var defaultCard = new UI.Card({
-  title:'Load a Recipe!',
-  subtitle:'Use RecipEZ App to push over recipe instructions.'
+
+// Show splash screen while waiting for data
+var splashWindow = new UI.Window();
+// Text element to inform user
+var text = new UI.Text({
+  position: new Vector2(0, 0),
+  size: new Vector2(144, 168),
+  text:'Waiting for IOS Data...',
+  font:'GOTHIC_28_BOLD',
+  color:'white',
+  textOverflow:'wrap',
+  textAlign:'center',
+  backgroundColor:'blue'
 });
-defaultCard.show();
 
-//menu
-function recipeIngredMenu(message){
-  var menu = new UI.Menu({
-      sections: [{
-        items: [{
-          title: 'Recipe',
-          subtitle: 'Show Instructions'
-        }, {
-          title: 'Ingredients',
-          subtitle: 'Qty and Nutrition'
-        }]
-      }]
-    });
-    menu.on('select', function(e){
-      //recipe
-      if(e.itemIndex === 0){
-        var steps = message.steps;
-        var i;
-        for(i=steps.length-1; i>=0; i--){
-            var card = new UI.Card({
-              title: 'Step ' + i,
-              body: steps[i],    
-            });
-            card.show();
-        }
+// Add to splashWindow and show
+splashWindow.add(text);
+splashWindow.show();
 
-  
-        
-      }     
-      //ingredients
-      else {
-        ingredientListMenu(message);
-      }
-    });
-    menu.show();
-}
-
-// Renders the list of ingredients
-function ingredientListMenu(message) {
-  var ingredients = message.ingredients;
-  console.log('ingredients #2:',JSON.stringify(ingredients)); 
-  // Create the UI menu
-  var items = ingredients.map(function(ing) {
-    return { title: ing };
-  });
-  console.log('items:' + items);
-  
-  // Priming the shitty cache
-  ingredients.forEach(function(ing) {
-    getIngredientInfo(ing, function() {}, function() {});
-  });
-  
-  var menu = UI.Menu({
-    sections: [{
-      items: items 
-    }]
-  });
-  menu.show();
-  // Call ingredient screen with the ingredient that was clicked.
-  menu.on('select', function(e) {
-    ingredientScreen(message.contents.ingredients[e.itemIndex]);
-  });
-}
-
-function ingredientScreen(ingredient) {
-  // Make request to get ingredient, and populate the screen.
-  getIngredientInfo(ingredient.name /* ? */, function success(data, status, request) {
-    // success - got the ingredient, build the screen.
-    Vibe.vibrate('short');
-  }, function error(error, status, request) {
-    // uh0h - show error message or go back.
-    Vibe.vibrate('long');
-  });
-}
+Accel.init();
 
 function getIngredientInfo(ingredient, success, error) {
   Ajax({
     url: encodeURI('http://recipezwolfram-devskwod.rhcloud.com/ingredient?q=' + ingredient + '&appid=9Q4Y3E-QJJR6RPR3U'),
     type: 'json'
-  }, success, error);
+  }, success, error); 
 }
 
-//load the recipe/ingredients menu
-defaultCard.on('click', 'up', function(e){
-  recipeIngredMenu(message);
+//build ingredients menu
+var parseIngredients = function(ingredients, numIngreds) {
+  var items = [];
+  for(var i = 0; i < numIngreds; i++) {
+    // Always upper case the description string
+    var title = ingredients[i];
+    
+    // Add to menu items array
+    items.push({
+      title:title
+    });
+  }
+  // Finally return whole array
+  return items;
+};
+
+//build instructions menu
+var parseInstructions = function(instructions, numInstrucs) {
+  var items = [];
+  for(var i = 0; i < numInstrucs; i++) {
+    // Always upper case the description string
+    var title = 'Step ' + i;
+    var body = instructions[i];
+    
+    // Add to menu items array
+    items.push({
+      title:title,
+      body:body,
+    });
+  }
+  // Finally return whole array
+  return items;
+};
+
+//build ingredients menu items
+var ingredsMenus = parseIngredients(ingredients, numIngreds);
+//build instructions menu items
+var instrucMenus = parseInstructions(instructions, numInstrucs);
+
+var ingMenus = new UI.Menu({
+  highlightBackgroundColor: 'blue',
+  highlightTextColor: 'white',
+  sections: [{
+    title:'Ingredients',
+    items: ingredsMenus,
+    scrollable: true
+  }]
 });
+
+var insMenus = new UI.Menu({
+  highlightBackgroundColor: 'green',
+    highlightTextColor: 'white',
+    sections: [{
+    title:'Steps',
+    items: instrucMenus,
+    scrollable: true
+  }]
+});
+var i = 0;
+insMenus.on('accelTap', function(e){
+    Vibe.vibrate('short');
+    if(i<numInstrucs-1)i++;
+    else i = 0;
+    // Create the Card for detailed view
+    var detailCard = new UI.Card({
+      title: 'Step '+ [i],
+      body: instructions[i]
+    });
+    detailCard.show();
+    setTimeout(function(){ detailCard.hide(); }, 5000);
+    
+});
+
+i = 0;
+ingMenus.on('accelTap', function(e){
+  function populateMenu(data) {
+    Vibe.vibrate('short');
+    if(i<numIngreds-1) i++;
+    else i = 0;
+    var calories = data.calories;
+    var fat = data.fat;
+    var carbs = data.carbs;
+    
+    // Create the Card for detailed view
+    var detailCard = new UI.Card({
+      title: ingredients[i],
+      body: 'Calories......' + calories + '\n' +
+            'Fat.............' + fat + '\n' + 
+            'Carbs.........' + carbs
+    });
+    detailCard.show();
+    setTimeout(function(){ detailCard.hide(); }, 5000);
+  }
+  
+  function handleError(error) {
+    console.error(error);
+     Vibe.vibrate('long');
+    
+    var detailCard = new UI.Card({
+      title: 'Request Failed!!!'
+    });
+    detailCard .show();
+  }
+  getIngredientInfo(ingredients[i], populateMenu, handleError);
+});
+
+////////////////
+  var mainMenu = new UI.Menu({
+    sections: [{
+      items: [{
+        title: 'Ingredients',
+        subtitle: 'View the ingredients'
+      }, {
+        title: 'Recipe',
+        subtitle: 'View the steps'
+      }]
+    }]
+  });
+  mainMenu.on('select', function(e) {
+    if(e.itemIndex === 0){
+      ingMenus.show();
+    }
+    else{
+      insMenus.show();
+    }
+  });
+  mainMenu.show();
+//////////////////////////
+
+//ingMenus.show();
+//insMenus.show();
+
+splashWindow.hide();
 
 //event listeners
 Pebble.addEventListener('ready', function() {
@@ -129,6 +202,9 @@ Pebble.addEventListener('appmessage', function(e) {
   // Get the dictionary from the message
   var dict = e.payload;
   console.log('Got message: ' + JSON.stringify(dict));
-  defaultCard.title = 'Recipe Loaded';
-  //message = e.payload; 
+  iphoneMessage = e.payload; 
 });
+
+
+       
+       
