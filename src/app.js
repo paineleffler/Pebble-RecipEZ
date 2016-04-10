@@ -8,12 +8,6 @@ Firebase.INTERNAL.forceWebSockets();
 
 var baseRef = new Firebase("https://myrecipez.firebaseio.com/");
 
-
-baseRef.child('cathacks').on('value', function(snapshot) {
-  console.log('new snap', JSON.stringify(snapshot.val()));
-  message = snapshot.val();
-});
-
 var message = {
   "ingredients": [
     "1 pita bread",
@@ -31,7 +25,6 @@ var message = {
     "eat pizza"
   ]
 };
-var iphoneMessage;
 
 //ingredient data
 var ingredients = message.ingredients;
@@ -40,6 +33,42 @@ var numIngreds = ingredients.length;
 var instructions = message.steps;
 var numInstrucs = message.steps.length;
 
+function handleNewMessage(_message) {
+  message = _message;
+  
+  ingredients = message.ingredients;
+  numIngreds = ingredients.length;
+  instructions = message.steps;
+  numInstrucs = message.steps.length;
+  
+  var mainMenu = new UI.Menu({
+    sections: [{
+      items: [{
+        title: 'Ingredients',
+        subtitle: 'View the ingredients'
+      }, {
+        title: 'Recipe',
+        subtitle: 'View the steps'
+      }]
+    }]
+  });
+  mainMenu.on('select', function(e) {
+    if(e.itemIndex === 0){
+      ingMenus.show();
+    }
+    else{
+      insMenus.show();
+    }
+  });
+  mainMenu.show();
+}
+
+baseRef.child('cathacks').on('value', function(snapshot) {
+  console.log('new snap', JSON.stringify(snapshot.val()));
+  handleNewMessage(snapshot.val());
+});
+
+handleNewMessage(message);
 
 // Show splash screen while waiting for data
 var splashWindow = new UI.Window();
@@ -177,33 +206,32 @@ ingMenus.on('accelTap', function(e){
 });
 
 ////////////////
-  var mainMenu = new UI.Menu({
-    sections: [{
-      items: [{
-        title: 'Ingredients',
-        subtitle: 'View the ingredients'
-      }, {
-        title: 'Recipe',
-        subtitle: 'View the steps'
-      }]
-    }]
-  });
-  mainMenu.on('select', function(e) {
-    if(e.itemIndex === 0){
-      ingMenus.show();
-    }
-    else{
-      insMenus.show();
-    }
-  });
-  mainMenu.show();
+//   var mainMenu = new UI.Menu({
+//     sections: [{
+//       items: [{
+//         title: 'Ingredients',
+//         subtitle: 'View the ingredients'
+//       }, {
+//         title: 'Recipe',
+//         subtitle: 'View the steps'
+//       }]
+//     }]
+//   });
+//   mainMenu.on('select', function(e) {
+//     if(e.itemIndex === 0){
+//       ingMenus.show();
+//     }
+//     else{
+//       insMenus.show();
+//     }
+//   });
+//   mainMenu.show();
 //////////////////////////
 
 //ingMenus.show();
 //insMenus.show();
 
 splashWindow.hide();
-
 
 
 
