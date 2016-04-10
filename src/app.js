@@ -13,6 +13,26 @@ var defaultCard = new UI.Card({
 
 defaultCard.show();
 
+defaultCard.on('click', 'up', function(e){
+  var menu = new UI.Menu({
+    sections: [{
+      items: [{
+        title: 'Recipe',
+        subtitle: 'Show Instructions'
+      }, {
+        title: 'Ingredients',
+        subtitle: 'Qty and Nutrition'
+      }]
+    }]
+  });
+  menu.on('select', function(e){
+    console.log('Selected item #' + e.itemIndex + ' of section #' + e.sectionIndex);
+    console.log('The item is titled "' + e.item.title + '"');
+  });
+  menu.show();
+});
+
+
 Pebble.addEventListener('ready', function() {
   // PebbleKit JS is ready!
   console.log('PebbleKit JS ready!');
