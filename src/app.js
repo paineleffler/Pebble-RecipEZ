@@ -12,3 +12,20 @@ var defaultCard = new UI.Card({
 });
 
 defaultCard.show();
+
+
+
+
+Pebble.addEventListener('ready', function() {
+  // PebbleKit JS is ready!
+  console.log('PebbleKit JS ready!');
+});
+
+// Get AppMessage events
+Pebble.addEventListener('appmessage', function(e) {
+  // Get the dictionary from the message
+  var dict = e.payload;
+  console.log('Got message: ' + JSON.stringify(dict));
+  defaultCard.title = 'Recipe Loaded';
+  }
+});
