@@ -5,6 +5,10 @@
  */
 
 var UI = require('ui');
+var Vibe = require('ui/vibe');
+var Accel = require('ui/accel');
+
+var message;
 
 var defaultCard = new UI.Card({
   title:'Load a Recipe!',
@@ -13,25 +17,33 @@ var defaultCard = new UI.Card({
 
 defaultCard.show();
 
-defaultCard.on('click', 'up', function(e){
+function recipeIngredMenu(message){
   var menu = new UI.Menu({
-    sections: [{
-      items: [{
-        title: 'Recipe',
-        subtitle: 'Show Instructions'
-      }, {
-        title: 'Ingredients',
-        subtitle: 'Qty and Nutrition'
+      sections: [{
+        items: [{
+          title: 'Recipe',
+          subtitle: 'Show Instructions'
+        }, {
+          title: 'Ingredients',
+          subtitle: 'Qty and Nutrition'
+        }]
       }]
-    }]
-  });
-  menu.on('select', function(e){
-    console.log('Selected item #' + e.itemIndex + ' of section #' + e.sectionIndex);
-    console.log('The item is titled "' + e.item.title + '"');
-  });
-  menu.show();
-});
+    });
+    menu.on('select', function(e){
+      //
+      if(e.itemIndex === 0) 
+        Vibe.vibrate('short');
+      else 
+        Vibe.vibrate('long');
+      console.log('Selected item #' + e.itemIndex + ' of section #' + e.sectionIndex);
+      console.log('The item is titled "' + e.item.title + '"');
+    });
+    menu.show();
+}
 
+defaultCard.on('click', 'up', function(e){
+  recipeIngredMenu(message);
+});
 
 Pebble.addEventListener('ready', function() {
   // PebbleKit JS is ready!
@@ -44,5 +56,7 @@ Pebble.addEventListener('appmessage', function(e) {
   var dict = e.payload;
   console.log('Got message: ' + JSON.stringify(dict));
   defaultCard.title = 'Recipe Loaded';
+  
+  message = e.payload;
   
 });
