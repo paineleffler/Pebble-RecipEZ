@@ -2,8 +2,18 @@ var UI = require('ui');
 var Vibe = require('ui/vibe');
 var Ajax = require('ajax');
 var Accel = require('ui/accel');
-
 var Vector2 = require('vector2');
+require('firebase');
+Firebase.INTERNAL.forceWebSockets();
+
+var baseRef = new Firebase("https://myrecipez.firebaseio.com/");
+
+
+baseRef.child('cathacks').on('value', function(snapshot) {
+  console.log('new snap', JSON.stringify(snapshot.val()));
+  message = snapshot.val();
+});
+
 var message = {
   "ingredients": [
     "1 pita bread",
@@ -194,18 +204,11 @@ ingMenus.on('accelTap', function(e){
 
 splashWindow.hide();
 
-//event listeners
-Pebble.addEventListener('ready', function() {
-  console.log('PebbleKit JS ready!');
-});
 
-// Get AppMessage events
-Pebble.addEventListener('appmessage', function(e) {
-  // Get the dictionary from the message
-  var dict = e.payload;
-  console.log('Got message: ' + JSON.stringify(dict));
-  iphoneMessage = e.payload; 
-});
+
+
+       
+       
 
 
        
