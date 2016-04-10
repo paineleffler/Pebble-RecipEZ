@@ -8,7 +8,23 @@ var UI = require('ui');
 var Vibe = require('ui/vibe');
 var Ajax = require('ajax');
 
-var message;
+var message = {
+  "ingredients": [
+    "1 pita bread",
+    "2 tbsp pizza sauce",
+    "1/4 cup mozerella cheese"
+  ],
+  "steps":[
+    "Preheat Oven to 365",
+    "Put sauce on pita bread",
+    "Put cheese on pizza",
+    "bake for 15 mins",
+    "eat pizza"
+  ]
+};
+
+console.log("message", JSON.stringify(message));
+console.log("ingredients", JSON.stringify(message.ingredients));
 
 var defaultCard = new UI.Card({
   title:'Load a Recipe!',
@@ -32,34 +48,70 @@ function recipeIngredMenu(message){
     menu.on('select', function(e){
       //recipe
       if(e.itemIndex === 0){
+        var steps = message.steps;
+        var i;
+        for(i=steps.length-1; i>=0; i--){
+            var card = new UI.Card({
+              title: 'Step ' + i,
+              body: steps[i],    
+            });
+            card.show();
+        }
+
+  
+        
       }     
       //ingredients
       else {
-        request();
+        ingredientListMenu(message);
       }
-
-      console.log('Selected item #' + e.itemIndex + ' of section #' + e.sectionIndex);
-      console.log('The item is titled "' + e.item.title + '"');
     });
     menu.show();
 }
 
-//wolfram request
-function request(){
-  Ajax(
-  {
-    url: 'http://recipezwolfram-devskwod.rhcloud.com/wolframalpha?q=3.5%20ounces%20chicken&appid=9Q4Y3E-QJJR6RPR3U',
-    type: 'json'
-  },
-  function(data, status, request){
-    console.log('Success'); 
+// Renders the list of ingredients
+function ingredientListMenu(message) {
+  var ingredients = message.ingredients;
+  console.log('ingredients #2:',JSON.stringify(ingredients)); 
+  // Create the UI menu
+  var items = ingredients.map(function(ing) {
+    return { title: ing };
+  });
+  console.log('items:' + items);
+  
+  // Priming the shitty cache
+  ingredients.forEach(function(ing) {
+    getIngredientInfo(ing, function() {}, function() {});
+  });
+  
+  var menu = UI.Menu({
+    sections: [{
+      items: items 
+    }]
+  });
+  menu.show();
+  // Call ingredient screen with the ingredient that was clicked.
+  menu.on('select', function(e) {
+    ingredientScreen(message.contents.ingredients[e.itemIndex]);
+  });
+}
+
+function ingredientScreen(ingredient) {
+  // Make request to get ingredient, and populate the screen.
+  getIngredientInfo(ingredient.name /* ? */, function success(data, status, request) {
+    // success - got the ingredient, build the screen.
     Vibe.vibrate('short');
-  },
-  function(error, status, request){
-    console.log('Failed', error);
+  }, function error(error, status, request) {
+    // uh0h - show error message or go back.
     Vibe.vibrate('long');
-  }
-  );
+  });
+}
+
+function getIngredientInfo(ingredient, success, error) {
+  Ajax({
+    url: encodeURI('http://recipezwolfram-devskwod.rhcloud.com/ingredient?q=' + ingredient + '&appid=9Q4Y3E-QJJR6RPR3U'),
+    type: 'json'
+  }, success, error);
 }
 
 //load the recipe/ingredients menu
@@ -78,5 +130,5 @@ Pebble.addEventListener('appmessage', function(e) {
   var dict = e.payload;
   console.log('Got message: ' + JSON.stringify(dict));
   defaultCard.title = 'Recipe Loaded';
-  message = e.payload; 
+  //message = e.payload; 
 });
